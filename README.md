@@ -24,7 +24,9 @@
 │   ├── raw/SCALE불량.csv        # 원본 데이터 (용량이 작아 예외적으로 추적)
 │   └── processed/                # 전처리 결과 (gitignore, 재생성 가능)
 ├── analysis/
-│   └── preprocessing.py          # EDA 기반 전처리 · 피처엔지니어링 · 시간 기준 분할
+│   ├── preprocessing.py          # EDA 기반 전처리 · 피처엔지니어링 · 시간 기준 분할 (스크립트 버전)
+│   ├── preprocessing_eda.ipynb   # 위와 동일 내용 + 시각화 (노트북 버전, 실행 결과 포함)
+│   └── model_training.ipynb      # 6개 모델 GridSearchCV 비교 학습 + SHAP 해석 (노트북 버전)
 ├── backend/                       # FastAPI 백엔드 + 정적 프런트엔드
 │   ├── app.py                    # API 엔드포인트 (13종)
 │   ├── models.py / db.py         # SQLAlchemy ORM / DB 세션

@@ -11,7 +11,12 @@ Scale 불량 데이터 전처리 & 피처 엔지니어링
   5) rolling_date가 존재 -> 랜덤 분할이 아닌 시간 기준 분할이 필요
 """
 
+import sys
 from pathlib import Path
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")  # Windows 콘솔(cp949)에서 한글 출력 깨짐 방지
+    # (Jupyter 커널의 OutStream에는 reconfigure가 없어 스크립트로 직접 실행할 때만 적용됨)
 
 import numpy as np
 import pandas as pd
@@ -118,10 +123,11 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     df["hsb_x_descaling"] = df["hsb_applied"] * df["descaling_count"]
 
     # --- 판두께 구간화 (후판일수록 방열이 느려 고온 노출시간이 길어질 수 있음) ---
+    # 라벨에 '<', '[', ']'를 안 쓰는 이유: XGBoost/LightGBM이 피처명에 이 문자를 허용하지 않음
     df["thick_bucket"] = pd.cut(
         df["pt_thick"],
         bins=[0, 20, 40, 60, np.inf],
-        labels=["박(<20)", "중(20-40)", "후(40-60)", "극후(>=60)"],
+        labels=["박(20미만)", "중(20-40)", "후(40-60)", "극후(60이상)"],
     )
 
     # --- 가열로 체류시간 대비 온도낙차 비율 (단위시간당 냉각속도 proxy) ---
