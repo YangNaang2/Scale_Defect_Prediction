@@ -1,0 +1,139 @@
+:root {
+  --bg: #EEF0F2;
+  --surface: #FFFFFF;
+  --surface-2: #F5F6F8;
+  --text: #1B2126;
+  --muted: #5B6670;
+  --border: #D7DBDE;
+  --accent: #C74A1E;
+  --accent-soft: #F4E3DA;
+  --accent2: #2F6690;
+  --accent2-soft: #DFEAF1;
+  --ok: #3E8E7E;
+  --ok-soft: #DFEEEA;
+  --warn: #B8860B;
+  --warn-soft: #F5EBD3;
+  --shadow: 0 1px 2px rgba(20,24,28,.06), 0 8px 24px rgba(20,24,28,.05);
+}
+
+/* 시스템이 다크 모드를 선호해도, 사용자가 아래 토글로 명시적으로 라이트를 선택했으면
+   (data-theme="light") 그쪽이 우선한다. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171A; --surface: #1E2226; --surface-2: #23282C;
+    --text: #E8EAEC; --muted: #9AA4AC; --border: #2C3236;
+    --accent: #FF8552; --accent-soft: #3A2A22; --accent2: #7FB4DD; --accent2-soft: #1F3140;
+    --ok: #5CC2AC; --ok-soft: #1D332E; --warn: #E0B84D; --warn-soft: #3A331A;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px rgba(0,0,0,.35);
+  }
+}
+/* 시스템이 라이트여도 사용자가 명시적으로 다크를 선택했으면(data-theme="dark") 이쪽이 이긴다. */
+:root[data-theme="dark"] {
+  --bg: #14171A; --surface: #1E2226; --surface-2: #23282C;
+  --text: #E8EAEC; --muted: #9AA4AC; --border: #2C3236;
+  --accent: #FF8552; --accent-soft: #3A2A22; --accent2: #7FB4DD; --accent2-soft: #1F3140;
+  --ok: #5CC2AC; --ok-soft: #1D332E; --warn: #E0B84D; --warn-soft: #3A331A;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px rgba(0,0,0,.35);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", system-ui, sans-serif;
+  line-height: 1.6;
+}
+.num { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-variant-numeric: tabular-nums; }
+
+header {
+  position: relative;
+  padding: 36px 28px 30px; border-bottom: 1px solid var(--border); background: var(--surface);
+}
+header .eyebrow {
+  font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 8px;
+}
+header h1 { font-size: clamp(24px, 3.2vw, 32px); margin: 0 0 10px; font-weight: 800; letter-spacing: -0.01em; }
+header .intro { font-size: 14.5px; color: var(--muted); max-width: 720px; margin: 0; line-height: 1.65; }
+
+#theme-toggle {
+  position: absolute; top: 28px; right: 28px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+@media (max-width: 640px) { #theme-toggle { position: static; margin-top: 14px; } }
+
+main {
+  max-width: 1100px; margin: 0 auto; padding: 24px 20px 80px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+}
+@media (max-width: 880px) { main { grid-template-columns: 1fr; } }
+section.card {
+  grid-column: span 2; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: var(--shadow); padding: 18px 22px;
+}
+@media (max-width: 880px) { section.card { grid-column: span 1; } }
+section.card.half { grid-column: span 1; }
+section.card h2 { font-size: 15px; margin: 0 0 14px; font-weight: 800; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 10px; }
+.tile { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.tile .v { font-size: 22px; font-weight: 800; color: var(--accent); }
+.tile .l { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td.truncate { max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+th { color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .03em; }
+tr:last-child td { border-bottom: none; }
+.tbl-wrap { overflow-x: auto; }
+
+.pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+.sev-critical { background: var(--accent-soft); color: var(--accent); }
+.sev-warning { background: var(--warn-soft); color: var(--warn); }
+.sev-info { background: var(--accent2-soft); color: var(--accent2); }
+.pill-best { background: var(--ok); color: #fff; margin-left: 4px; }
+
+#models-table tbody tr.best-row { background: var(--ok-soft); }
+#models-table tbody tr.best-row td:first-child { box-shadow: inset 3px 0 0 var(--ok); }
+
+.risk-high { color: var(--accent); font-weight: 700; }
+.risk-mid { color: var(--warn); font-weight: 700; }
+.risk-low { color: var(--ok); font-weight: 700; }
+.risk-none { color: var(--muted); }
+
+button {
+  font: inherit; cursor: pointer; border: 1px solid var(--border); background: var(--surface-2);
+  color: var(--text); border-radius: 8px; padding: 6px 12px; font-size: 12.5px; font-weight: 600;
+}
+button:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.primary:hover { opacity: .9; background: var(--accent); color: #fff; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+
+input, select {
+  font: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); font-size: 13px;
+}
+
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.field input, .field select { width: 100%; }
+
+.field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px 14px; margin-bottom: 16px; }
+.field-group-title {
+  font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--accent2); margin: 4px 0 10px;
+}
+
+.shap-bar-wrap { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.shap-row { display: grid; grid-template-columns: 160px 1fr 60px; align-items: center; gap: 8px; font-size: 12.5px; }
+.shap-track { background: var(--surface-2); border-radius: 6px; height: 10px; position: relative; overflow: hidden; }
+.shap-fill { display: block; height: 100%; border-radius: 6px; }
+.shap-fill.pos { background: var(--accent); }
+.shap-fill.neg { background: var(--accent2); }
+
+.muted { color: var(--muted); font-size: 12.5px; }
+.empty { color: var(--muted); font-size: 13px; padding: 10px 0; }
+
+.detail-summary { display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; margin-bottom: 4px; }
+.detail-summary .prob { font-size: 26px; font-weight: 800; }

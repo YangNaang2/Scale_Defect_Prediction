@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scale 불량 예측 대시보드</title>
+  <script>
+    // 저장된 테마 선택이 있으면 CSS/첫 페인트 전에 반영해 깜빡임을 막는다.
+    (function () {
+      var saved = localStorage.getItem("scale-dashboard-theme");
+      if (saved === "light" || saved === "dark") {
+        document.documentElement.setAttribute("data-theme", saved);
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <button id="theme-toggle" type="button"></button>
+    <div class="eyebrow">후판 압연공정 · Scale 불량 예측 시스템</div>
+    <h1>Scale 불량 예측 대시보드</h1>
+    <p class="intro">
+      가열로·압연 공정 데이터로 코일별 Scale 불량 확률을 예측하고 SHAP으로 근거를 설명합니다.
+      아래에서 학습된 모델을 비교해 직접 선택하고, CSV를 통째로 채점하거나 값을 직접 입력해
+      바로 테스트해볼 수 있습니다.
+    </p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>모델 관리</h2>
+      <p class="muted" style="margin:0 0 14px;">
+        지금까지 학습에서 나온 모든 후보 모델입니다(검증셋 AUC 높은 순). 성능과 그리드서치로 찾은
+        파라미터를 비교해서 원하는 모델을 직접 활성화하세요 — 활성화된 모델이 모든 예측(코일 상세 조회,
+        일괄 처리, 임의값 예측)에 즉시 반영됩니다.
+      </p>
+      <div class="tbl-wrap"><table id="models-table">
+        <thead><tr><th>학습일시</th><th>알고리즘</th><th>정밀도</th><th>재현율</th><th>F1</th><th>AUC</th><th>파라미터</th><th>상태</th><th></th></tr></thead>
+        <tbody><tr><td colspan="9" class="empty">불러오는 중…</td></tr></tbody>
+      </table></div>
+    </section>
+
+    <section class="card">
+      <h2>일괄 처리 — CSV 전체 채점</h2>
+      <p class="muted" style="margin:0 0 12px;">
+        SCALE불량.csv와 같은 형식의 파일을 통째로 올리면 활성 모델이 전체 행을 한 번에 채점합니다.
+        (DB에는 기록하지 않는 확인용 채점 — 결과가 궁금할 때 바로 써 보는 용도입니다.)
+      </p>
+      <form id="batch-form" class="row">
+        <input type="file" id="batch-file" accept=".csv" required>
+        <button type="submit" class="primary">실행</button>
+      </form>
+      <div id="batch-result" style="margin-top:14px;"></div>
+    </section>
+
+    <section class="card">
+      <h2>코일 상세 조회</h2>
+      <div class="row" style="margin-bottom:14px;">
+        <div class="field">
+          <label for="plate-search">코일 번호(plate_no)</label>
+          <input id="plate-search" placeholder="예: PLT_1001" size="20">
+        </div>
+        <button id="search-plate" class="primary" style="align-self:flex-end;">조회</button>
+      </div>
+      <div id="plate-detail"><div class="muted">조회할 코일 번호를 입력하세요.</div></div>
+    </section>
+
+    <section class="card">
+      <h2>임의값 예측 (What-if)</h2>
+      <p class="muted" style="margin:0 0 16px;">
+        실제 코일이 아니어도 됩니다 — 아래 값을 원하는 대로 바꿔보고 "예측하기"를 누르면
+        그 조합의 Scale 불량 확률과 SHAP 근거를 바로 보여줍니다. DB에는 기록되지 않습니다.
+      </p>
+      <form id="adhoc-form">
+        <div class="field-group-title">제품 사양</div>
+        <div class="field-grid">
+          <div class="field">
+            <label for="ah-spec-country">국가 사양</label>
+            <select id="ah-spec-country" name="spec_country">
+              <option value="미국" selected>미국</option>
+              <option value="영국">영국</option>
+              <option value="프랑스">프랑스</option>
+              <option value="독일">독일</option>
+              <option value="한국">한국</option>
+              <option value="일본">일본</option>
+              <option value="공통">공통</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="ah-steel-kind">강종</label>
+            <select id="ah-steel-kind" name="steel_kind">
+              <option value="T" selected>T</option>
+              <option value="C">C</option>
+            </select>
+          </div>
+          <div class="field"><label for="ah-thick">판두께(mm)</label><input type="number" id="ah-thick" name="pt_thick" value="32" required></div>
+          <div class="field"><label for="ah-width">판폭(mm)</label><input type="number" id="ah-width" name="pt_width" value="3700" required></div>
+          <div class="field"><label for="ah-length">판길이(mm)</label><input type="number" id="ah-length" name="pt_length" value="15100" required></div>
+        </div>
+
+        <div class="field-group-title">가열로</div>
+        <div class="field-grid">
+          <div class="field">
+            <label for="ah-fur-no">가열로 호기</label>
+            <select id="ah-fur-no" name="fur_no">
+              <option value="1" selected>1호기</option>
+              <option value="2">2호기</option>
+              <option value="3">3호기</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="ah-fur-row">투입 열</label>
+            <select id="ah-fur-row" name="fur_input_row">
+              <option value="1" selected>1열</option>
+              <option value="2">2열</option>
+            </select>
+          </div>
+          <div class="field"><label for="ah-heat-temp">가열대 온도(℃)</label><input type="number" id="ah-heat-temp" name="fur_heat_temp" value="1150" required></div>
+          <div class="field"><label for="ah-heat-time">가열대 시간(분)</label><input type="number" id="ah-heat-time" name="fur_heat_time" value="90" required></div>
+          <div class="field"><label for="ah-soak-temp">균열대 온도(℃)</label><input type="number" id="ah-soak-temp" name="fur_soak_temp" value="1145" required></div>
+          <div class="field"><label for="ah-soak-time">균열대 시간(분)</label><input type="number" id="ah-soak-time" name="fur_soak_time" value="65" required></div>
+          <div class="field"><label for="ah-total-time">가열로 총 시간(분)</label><input type="number" id="ah-total-time" name="fur_total_time" value="245" required></div>
+        </div>
+
+        <div class="field-group-title">압연</div>
+        <div class="field-grid">
+          <div class="field">
+            <label for="ah-hsb">Hot Scale Breaker</label>
+            <select id="ah-hsb" name="hsb_applied">
+              <option value="true" selected>적용</option>
+              <option value="false">미적용</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="ah-method">압연 방식</label>
+            <select id="ah-method" name="rolling_method">
+              <option value="TMCP" selected>TMCP(온도제어)</option>
+              <option value="CR">CR(제어압연)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="ah-rolling-temp">사상압연온도(℃)</label>
+            <input type="number" id="ah-rolling-temp" name="rolling_temp" value="900" placeholder="비우면 자동 대치">
+          </div>
+          <div class="field"><label for="ah-descaling">Descaling 횟수</label><input type="number" id="ah-descaling" name="descaling_count" value="8" required></div>
+          <div class="field">
+            <label for="ah-work-group">작업조</label>
+            <select id="ah-work-group" name="work_group">
+              <option value="1조" selected>1조</option>
+              <option value="2조">2조</option>
+              <option value="3조">3조</option>
+              <option value="4조">4조</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="primary">예측하기</button>
+      </form>
+      <div id="adhoc-result" style="margin-top:16px;"><div class="muted">값을 입력하고 "예측하기"를 눌러보세요.</div></div>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
